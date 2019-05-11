@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:ns1="http://schemas.android.com/tools">
 
-    <string name="headerlayout_scrolling_view_behavior" translatable="false">com.zzx.headerlayout_kotlin.HeaderLayout$ScrollingViewBehavior</string>
+    <declare-styleable name="HeaderLayout_Transformation">
+        <attr name="transformation_behavior">
+            <flag name="scroll" value="0x01"/>
+            <flag name="alpha" value="0x02"/>
+        </attr>
+    </declare-styleable>
+
+    <string name="headerlayout_scrolling_view_behavior" translatable="false">
+        com.zzx.headerlayout_kotlin.HeaderLayout$ScrollingViewBehavior
+    </string>
 </resources>

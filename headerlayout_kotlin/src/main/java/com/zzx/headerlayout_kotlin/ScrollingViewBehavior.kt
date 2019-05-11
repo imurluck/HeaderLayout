@@ -32,7 +32,7 @@ class ScrollingViewBehavior<V : View>(
             val dependencyParams = dependency.layoutParams as CoordinatorLayout.LayoutParams
             val offset = (dependency.bottom + dependencyParams.bottomMargin +
                     originTopMargin) - child.top
-            ViewCompat.offsetTopAndBottom(child, -offset)
+            ViewCompat.offsetTopAndBottom(child, offset)
         }
     }
 
