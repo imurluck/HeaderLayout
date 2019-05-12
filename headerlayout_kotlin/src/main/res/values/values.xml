@@ -5,6 +5,7 @@
         <attr name="transformation_behavior">
             <flag name="scroll" value="0x01"/>
             <flag name="alpha" value="0x02"/>
+            <flag name="extend_scale" value="0x04"/>
         </attr>
     </declare-styleable>
 

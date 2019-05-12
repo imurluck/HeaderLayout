@@ -10,6 +10,7 @@
             android:id="@+id/headerLayout"
             android:layout_width="match_parent"
             android:layout_height="200dp"
+            android:background="@color/colorPrimary"
             >
 
         <ImageView
@@ -17,7 +18,7 @@
                 android:layout_height="match_parent"
                 android:src="@drawable/book"
                 android:scaleType="centerCrop"
-                app:transformation_behavior="scroll|alpha"
+                app:transformation_behavior="alpha|extend_scale"
 
         />
     </com.zzx.headerlayout_kotlin.HeaderLayout>

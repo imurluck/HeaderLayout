@@ -14,6 +14,7 @@ import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
 import androidx.core.view.children
 import com.zzx.headerlayout_kotlin.transformation.AlphaTransformationBehavior
+import com.zzx.headerlayout_kotlin.transformation.ExtendScaleTransformationBehavior
 import com.zzx.headerlayout_kotlin.transformation.TransformationBehavior
 import kotlin.math.max
 
@@ -22,11 +23,11 @@ class HeaderLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), CoordinatorLayout.AttachedBehavior {
 
-    private var maxHeight = 600
+    var maxHeight = 600
 
-    private var minHeight = 100
+    var minHeight = 100
 
-    private var extendHeight = 200
+    var extendHeight = 200
 
     private var scrollState = ScrollState.STATE_MAX_HEIGHT
 
@@ -293,6 +294,9 @@ class HeaderLayout @JvmOverloads constructor(
                 if (transformationFlags and TRANSFORMATION_ALPHA != 0) {
                     add(AlphaTransformationBehavior())
                 }
+                if (transformationFlags and TRANSFORMATION_EXTEND_SCALE != 0) {
+                    add(ExtendScaleTransformationBehavior())
+                }
             }
         }
 
@@ -301,6 +305,7 @@ class HeaderLayout @JvmOverloads constructor(
             private const val TRANSFORMATION_NOTHING = 0x00
             private const val TRANSFORMATION_SCROLL = 0x01
             private const val TRANSFORMATION_ALPHA = 0x02
+            private const val TRANSFORMATION_EXTEND_SCALE = 0x04
         }
 
 
