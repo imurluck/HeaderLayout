@@ -7,9 +7,10 @@
             <flag name="alpha" value="0x02"/>
             <flag name="extend_scale" value="0x04"/>
         </attr>
+        <attr name="sticky_until_exit" format="boolean"/>
     </declare-styleable>
 
-    <string name="headerlayout_scrolling_view_behavior" translatable="false">
+    <string name="header_layout_scrolling_view_behavior" translatable="false">
         com.zzx.headerlayout_kotlin.HeaderLayout$ScrollingViewBehavior
     </string>
 </resources>

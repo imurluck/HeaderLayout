@@ -10,17 +10,24 @@
             android:id="@+id/headerLayout"
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:background="@color/colorPrimary"
-            >
+            android:background="@color/colorPrimary">
 
         <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:src="@drawable/book"
                 android:scaleType="centerCrop"
-                app:transformation_behavior="alpha|extend_scale"
+                app:transformation_behavior="alpha|extend_scale"/>
 
-        />
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/app_name"
+                android:layout_gravity="center|bottom"
+                app:transformation_behavior="scroll"
+                android:gravity="center_horizontal"
+                style="@style/TextAppearance.AppCompat.Body1"
+                android:textColor="@android:color/white"/>
     </com.zzx.headerlayout_kotlin.HeaderLayout>
 
     <androidx.recyclerview.widget.RecyclerView

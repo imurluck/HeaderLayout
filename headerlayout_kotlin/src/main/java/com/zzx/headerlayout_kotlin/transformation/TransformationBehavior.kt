@@ -5,13 +5,13 @@ import com.zzx.headerlayout_kotlin.HeaderLayout
 
 interface TransformationBehavior<in V: View> {
 
-    fun onStateMinHeight(target: V, parent: HeaderLayout)
+    fun onStateMinHeight(child: V, parent: HeaderLayout, unConsumedDy: Int)
 
-    fun onStateNormalProcess(target: V, parent: HeaderLayout, percent: Float)
+    fun onStateNormalProcess(child: V, parent: HeaderLayout, percent: Float, dy: Int)
 
-    fun onStateMaxHeight(target: V, parent: HeaderLayout)
+    fun onStateMaxHeight(child: V, parent: HeaderLayout, unConsumedDy: Int)
 
-    fun onStateExtendProcess(target: V, parent: HeaderLayout, percent: Float)
+    fun onStateExtendProcess(child: V, parent: HeaderLayout, percent: Float, dy: Int)
 
-    fun onStateExtendMaxEnd(target: V, parent: HeaderLayout)
+    fun onStateExtendMaxEnd(child: V, parent: HeaderLayout, unConsumedDy: Int)
 }

@@ -1,42 +1,45 @@
 package com.zzx.headerlayout_kotlin.transformation
 
-import android.util.Log
 import android.view.View
 import com.zzx.headerlayout_kotlin.HeaderLayout
 
 class ExtendScaleTransformationBehavior: TransformationBehaviorAdapter<View>() {
 
-    override fun onStateMinHeight(target: View, parent: HeaderLayout) {
+    override fun onStateMinHeight(
+        child: View,
+        parent: HeaderLayout,
+        dy: Int
+    ) {
 //        Log.e(TAG, "onStateMinHeight -> bottom=${parent.bottom}")
-        super.onStateMinHeight(target, parent)
+        super.onStateMinHeight(child, parent, dy)
     }
 
-    override fun onStateNormalProcess(target: View, parent: HeaderLayout, percent: Float) {
+    override fun onStateNormalProcess(child: View, parent: HeaderLayout, percent: Float, dy: Int) {
 //        Log.e(TAG, "onStateNormalProcess -> bottom=${parent.bottom} percent=$percent")
-        super.onStateNormalProcess(target, parent, percent)
+        super.onStateNormalProcess(child, parent, percent, dy)
     }
 
-    override fun onStateMaxHeight(target: View, parent: HeaderLayout) {
+    override fun onStateMaxHeight(child: View, parent: HeaderLayout, unConsumedDy: Int) {
 //        Log.e(TAG, "onStateMaxHeight -> bottom=${parent.bottom}")
-        target.scaleX = 1.0f
-        target.scaleY = 1.0f
+        child.scaleX = 1.0f
+        child.scaleY = 1.0f
 //        Log.e(TAG, "onStateMaxHeight -> imageBottom=${target.bottom}")
-        super.onStateMaxHeight(target, parent)
+        super.onStateMaxHeight(child, parent, unConsumedDy)
     }
 
-    override fun onStateExtendProcess(target: View, parent: HeaderLayout, percent: Float) {
+    override fun onStateExtendProcess(child: View, parent: HeaderLayout, percent: Float, dy: Int) {
 //        Log.e(TAG, "onStateExtendProcess -> bottom=${parent.bottom} percent=$percent")
-        target.scaleX = (percent * parent.extendHeight) / target.height * 2.0f + 1.0f
-        target.scaleY = (percent * parent.extendHeight) / target.height * 2.0f + 1.0f
+        child.scaleX = (percent * parent.extendHeight) / child.height * 2.0f + 1.0f
+        child.scaleY = (percent * parent.extendHeight) / child.height * 2.0f + 1.0f
 //        Log.e(TAG, "onStateExtendProcess -> imageBottom=${target.bottom}")
-        super.onStateExtendProcess(target, parent, percent)
+        super.onStateExtendProcess(child, parent, percent, dy)
     }
 
-    override fun onStateExtendMaxEnd(target: View, parent: HeaderLayout) {
+    override fun onStateExtendMaxEnd(child: View, parent: HeaderLayout, unConsumedDy: Int) {
 //        Log.e(TAG, "onStateExtendMaxEnd -> bottom=${parent.bottom}")
-        target.scaleX = parent.extendHeight.toFloat() / target.height.toFloat() * 2.0f + 1.0f
-        target.scaleY = parent.extendHeight.toFloat() / target.height.toFloat() * 2.0f + 1.0f
-        super.onStateExtendMaxEnd(target, parent)
+        child.scaleX = parent.extendHeight.toFloat() / child.height.toFloat() * 2.0f + 1.0f
+        child.scaleY = parent.extendHeight.toFloat() / child.height.toFloat() * 2.0f + 1.0f
+        super.onStateExtendMaxEnd(child, parent, unConsumedDy)
     }
 
     companion object {

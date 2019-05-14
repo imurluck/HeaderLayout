@@ -11,21 +11,24 @@ import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout.DefaultBehavior
 import androidx.coordinatorlayout.widget.CoordinatorLayout.Behavior
+import androidx.core.animation.doOnEnd
 import androidx.core.view.*
 import com.zzx.headerlayout_kotlin.transformation.AlphaTransformationBehavior
 import com.zzx.headerlayout_kotlin.transformation.ExtendScaleTransformationBehavior
+import com.zzx.headerlayout_kotlin.transformation.ScrollTransformationBehavior
 import com.zzx.headerlayout_kotlin.transformation.TransformationBehavior
+import java.lang.IllegalStateException
 
 @DefaultBehavior(HeaderLayout.HeaderLayoutBehavior::class)
 class HeaderLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), CoordinatorLayout.AttachedBehavior {
 
-    var maxHeight = 600
+    var maxHeight = 0
 
-    var minHeight = 100
+    var minHeight = 0
 
-    var extendHeight = 200
+    var extendHeight = DEFAULT_EXTEND_HEIGHT
 
     private var scrollState = ScrollState.STATE_MAX_HEIGHT
 
@@ -55,11 +58,55 @@ class HeaderLayout @JvmOverloads constructor(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         maxHeight = measuredHeight
-
+        if (maxHeight == 0) {
+            throw IllegalStateException("the height of HeaderLayout can't be 0")
+        }
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
+        for (child in children) {
+            (child.layoutParams as LayoutParams).apply {
+                if (stickyUntilExit) {
+                    minTop = minHeight
+                    minHeight += child.height
+                }
+            }
+        }
+    }
+
+    fun offsetChild(child: View, dy: Int) {
+        Log.e(TAG, "offsetChild -> dy=$dy")
+        (child.layoutParams as LayoutParams).apply {
+            if (stickyUntilExit) {
+                var unConsumedDy = dy
+                if (dy < 0) {
+                    if (minTopOffset != 0) {
+                        if (dy + minTopOffset < 0) {
+                            unConsumedDy = dy + minTopOffset
+                            minTopOffset = 0
+                        } else {
+                            minTopOffset += dy
+                            unConsumedDy = 0
+                        }
+                    }
+                    if (unConsumedDy != 0) {
+                        ViewCompat.offsetTopAndBottom(child, -unConsumedDy)
+                    }
+                } else {
+                    if (child.top == minTop) {
+                        minTopOffset += dy
+                        unConsumedDy = 0
+                    } else if (child.top - dy < minTop) {
+                        unConsumedDy = child.top - minTop
+                        minTopOffset = dy - (child.top - minTop)
+                    }
+                    ViewCompat.offsetTopAndBottom(child, -unConsumedDy)
+                }
+            } else {
+                ViewCompat.offsetTopAndBottom(child, -dy)
+            }
+        }
     }
 
     override fun generateLayoutParams(attrs: AttributeSet?): LayoutParams = LayoutParams(context, attrs)
@@ -70,17 +117,17 @@ class HeaderLayout @JvmOverloads constructor(
 
     override fun getBehavior(): Behavior<*> = HeaderLayoutBehavior(context)
 
-    private fun dispatchTransformationBehaviors(scrollState: ScrollState, percent: Float = 1.0f) {
+    private fun dispatchTransformationBehaviors(scrollState: ScrollState, dy: Int, percent: Float = 1.0f) {
         for (child in children) {
             val layoutParams = child.layoutParams as LayoutParams
             if (layoutParams.transformationBehaviors != null && layoutParams.transformationBehaviors!!.size > 0) {
                 for (behavior in layoutParams.transformationBehaviors!!) {
                     when (scrollState) {
-                        ScrollState.STATE_MIN_HEIGHT -> behavior.onStateMinHeight(child, this)
-                        ScrollState.STATE_NORMAL_PROCESS -> behavior.onStateNormalProcess(child, this, percent)
-                        ScrollState.STATE_MAX_HEIGHT -> behavior.onStateMaxHeight(child, this)
-                        ScrollState.STATE_EXTEND_PROCESS -> behavior.onStateExtendProcess(child, this, percent)
-                        ScrollState.STATE_EXTEND_MAX_END -> behavior.onStateExtendMaxEnd(child, this)
+                        ScrollState.STATE_MIN_HEIGHT -> behavior.onStateMinHeight(child, this, dy)
+                        ScrollState.STATE_NORMAL_PROCESS -> behavior.onStateNormalProcess(child, this, percent, dy)
+                        ScrollState.STATE_MAX_HEIGHT -> behavior.onStateMaxHeight(child, this, dy)
+                        ScrollState.STATE_EXTEND_PROCESS -> behavior.onStateExtendProcess(child, this, percent, dy)
+                        ScrollState.STATE_EXTEND_MAX_END -> behavior.onStateExtendMaxEnd(child, this, dy)
                     }
                 }
             }
@@ -96,6 +143,10 @@ class HeaderLayout @JvmOverloads constructor(
 
         private var isBackAnimationDo = false
 
+        private var canAcceptFling = false
+
+        private var canAcceptScroll = false
+
         override fun onStartNestedScroll(
             coordinatorLayout: CoordinatorLayout,
             child: HeaderLayout,
@@ -105,8 +156,9 @@ class HeaderLayout @JvmOverloads constructor(
             type: Int
         ): Boolean {
             childUnConsumedDy = 0
-            isBackAnimationDo = false
-            return ViewCompat.SCROLL_AXIS_VERTICAL and axes != 0
+            canAcceptFling = true
+            canAcceptScroll = true
+            return ViewCompat.SCROLL_AXIS_VERTICAL and axes != 0 && canScrollDown()
         }
 
         override fun onNestedPreScroll(
@@ -124,9 +176,9 @@ class HeaderLayout @JvmOverloads constructor(
             } else if (dy < 0 && childUnConsumedDy < 0 && canScrollDown()) {
                 //手指下滑时，需要等target view滑到顶部且还有未消耗完的dy,才将滑动交给HeaderLayout处理
                 //且分为两种情况，如果是fling产生的滑动，由于每次分发的dy都是剩下未滑动完的位移，需要特殊处理
-                if (type == ViewCompat.TYPE_NON_TOUCH) {
+                if (type == ViewCompat.TYPE_NON_TOUCH && canAcceptFling) {
                     consumed[1] = preScrollDown(child, dy, true)
-                } else {
+                } else if (type == ViewCompat.TYPE_TOUCH && canAcceptScroll) {
                     consumed[1] = preScrollDown(child, dy, false)
                 }
             }
@@ -140,7 +192,8 @@ class HeaderLayout @JvmOverloads constructor(
          * 手指下滑
          */
         private fun preScrollDown(headerLayout: HeaderLayout, dy: Int, fling: Boolean): Int {
-            if (headerLayout.scrollState == ScrollState.STATE_EXTEND_MAX_END) {
+            Log.e(TAG, "preScrollDown -> dy=$dy, fling=$fling, state=${headerLayout.scrollState}")
+            if (headerLayout.scrollState >= ScrollState.STATE_EXTEND_MAX_END) {
                 return 0
             }
             if (fling && headerLayout.scrollState >= ScrollState.STATE_MAX_HEIGHT) {
@@ -154,12 +207,12 @@ class HeaderLayout @JvmOverloads constructor(
                         bottom = maxHeight
                         consumedDy = bottom - minHeight
                         scrollState = ScrollState.STATE_MAX_HEIGHT
-                        dispatchTransformationBehaviors(scrollState)
+                        dispatchTransformationBehaviors(scrollState, consumedDy)
                     } else {
                         consumedDy = bottom - (maxHeight + extendHeight)
                         bottom = maxHeight + extendHeight
                         scrollState = ScrollState.STATE_EXTEND_MAX_END
-                        dispatchTransformationBehaviors(scrollState)
+                        dispatchTransformationBehaviors(scrollState, consumedDy)
                     }
                 } else {
                     var unConsumedDy = dy
@@ -168,14 +221,14 @@ class HeaderLayout @JvmOverloads constructor(
                         bottom -= dy
                         scrollState = ScrollState.STATE_NORMAL_PROCESS
                         val percent = (bottom - minHeight).toFloat() / (maxHeight - minHeight).toFloat()
-                        dispatchTransformationBehaviors(scrollState, percent)
+                        dispatchTransformationBehaviors(scrollState, consumedDy, percent)
                     }
                     if (bottom < maxHeight && bottom - dy >= maxHeight) {
                         consumedDy = bottom - maxHeight
                         unConsumedDy = dy - consumedDy
                         bottom = maxHeight
                         scrollState = ScrollState.STATE_MAX_HEIGHT
-                        dispatchTransformationBehaviors(scrollState)
+                        dispatchTransformationBehaviors(scrollState, consumedDy)
                     }
                     if (bottom >= maxHeight && bottom - unConsumedDy > maxHeight) {
                         if (fling) {
@@ -185,7 +238,7 @@ class HeaderLayout @JvmOverloads constructor(
                         bottom -= unConsumedDy
                         scrollState = ScrollState.STATE_EXTEND_PROCESS
                         val percent = (bottom - maxHeight).toFloat() / extendHeight
-                        dispatchTransformationBehaviors(scrollState, percent)
+                        dispatchTransformationBehaviors(scrollState, consumedDy, percent)
                     }
                 }
             }
@@ -199,14 +252,14 @@ class HeaderLayout @JvmOverloads constructor(
             if (headerLayout.scrollState == ScrollState.STATE_MIN_HEIGHT) {
                 return 0
             }
-            var consumedDy = 0
+            var consumedDy: Int
             headerLayout.apply {
                 //上滑之后到了最小高度
                 if (bottom - dy <= minHeight) {
                     consumedDy = bottom - minHeight
                     bottom = minHeight
                     scrollState = ScrollState.STATE_MIN_HEIGHT
-                    dispatchTransformationBehaviors(scrollState)
+                    dispatchTransformationBehaviors(scrollState, consumedDy)
                 } else {
                     consumedDy = dy
                     var unConsumedDy = dy
@@ -215,21 +268,21 @@ class HeaderLayout @JvmOverloads constructor(
                         bottom -= dy
                         val percent = (bottom - maxHeight).toFloat() / extendHeight.toFloat()
                         scrollState = ScrollState.STATE_EXTEND_PROCESS
-                        dispatchTransformationBehaviors(scrollState, percent)
+                        dispatchTransformationBehaviors(scrollState, consumedDy, percent)
                     }
                     //之前在最大伸展高度与拓展的高度之间, 上滑之后小于了最大高度
                     if (bottom > maxHeight && bottom - dy <= maxHeight) {
                         unConsumedDy = dy - (bottom - maxHeight)
                         bottom = maxHeight
                         scrollState = ScrollState.STATE_MAX_HEIGHT
-                        dispatchTransformationBehaviors(scrollState)
+                        dispatchTransformationBehaviors(scrollState, consumedDy)
                     }
                     //之前在最小高度和最大高度之间
                     if (bottom <= maxHeight && bottom - unConsumedDy < maxHeight) {
                         bottom -= unConsumedDy
                         val percent = (bottom - minHeight).toFloat() / (maxHeight - minHeight).toFloat()
                         scrollState = ScrollState.STATE_NORMAL_PROCESS
-                        dispatchTransformationBehaviors(scrollState, percent)
+                        dispatchTransformationBehaviors(scrollState, consumedDy, percent)
                     }
                 }
 
@@ -242,12 +295,15 @@ class HeaderLayout @JvmOverloads constructor(
                 return
             }
             isBackAnimationDo = true
+            canAcceptFling = false
+            canAcceptScroll = false
             ValueAnimator.ofFloat(headerLayout.bottom.toFloat(), headerLayout.maxHeight.toFloat()).apply {
                 addUpdateListener { animator ->
-                    Log.e(TAG, "backToMaxHeight -> animatedValue = ${animator.animatedValue} bottom=${headerLayout.bottom}")
                     val dy = (headerLayout.bottom - animator.animatedValue as Float).toInt()
-                    Log.e(TAG, "backToMaxHeight -> dy=$dy")
                     preScrollUp(headerLayout, dy)
+                }
+                doOnEnd {
+                    isBackAnimationDo = false
                 }
                 duration = 300L
             }.start()
@@ -272,7 +328,9 @@ class HeaderLayout @JvmOverloads constructor(
             target: View,
             type: Int
         ) {
-            backToMaxHeight(child)
+            if (type == ViewCompat.TYPE_TOUCH) {
+                backToMaxHeight(child)
+            }
         }
     }
 
@@ -281,6 +339,12 @@ class HeaderLayout @JvmOverloads constructor(
         private var transformationFlags = 0x00
 
         var transformationBehaviors: MutableList<TransformationBehavior<View>>? = null
+
+        var minTop = 0
+
+        var minTopOffset = 0
+
+        var stickyUntilExit = false
 
         constructor(width: Int, height: Int) : super(width, height)
         constructor(width: Int, height: Int, gravity: Int) : super(width, height, gravity)
@@ -291,10 +355,15 @@ class HeaderLayout @JvmOverloads constructor(
         constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.HeaderLayout_Transformation)
             transformationFlags = a.getInt(R.styleable.HeaderLayout_Transformation_transformation_behavior, 0x00)
+            stickyUntilExit = a.getBoolean(R.styleable.HeaderLayout_Transformation_sticky_until_exit, false)
             parseTransformationBehaviors(transformationFlags)
             a.recycle()
         }
 
+        /**
+         * 解析在xml中设置的transformation_behavior,解析成[TransformationBehavior]存储在[transformationBehaviors]中，
+         * 在behavior分发时会遍历[transformationBehaviors]进行分发
+         */
         private fun parseTransformationBehaviors(transformationFlags: Int) {
             if (transformationFlags and TRANSFORMATION_NOTHING != 0) {
                 return
@@ -305,6 +374,9 @@ class HeaderLayout @JvmOverloads constructor(
                 }
                 if (transformationFlags and TRANSFORMATION_EXTEND_SCALE != 0) {
                     add(ExtendScaleTransformationBehavior())
+                }
+                if (transformationFlags and TRANSFORMATION_SCROLL != 0) {
+                    add(ScrollTransformationBehavior())
                 }
             }
         }
@@ -322,6 +394,8 @@ class HeaderLayout @JvmOverloads constructor(
 
     companion object {
         private const val TAG = "HeaderLayout"
+
+        private const val DEFAULT_EXTEND_HEIGHT = 200
     }
 
 }
