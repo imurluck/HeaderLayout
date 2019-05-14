@@ -1,5 +1,6 @@
 package com.zzx.headerlayout_kotlin
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
@@ -10,13 +11,10 @@ import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout.DefaultBehavior
 import androidx.coordinatorlayout.widget.CoordinatorLayout.Behavior
-import androidx.core.view.NestedScrollingParentHelper
-import androidx.core.view.ViewCompat
-import androidx.core.view.children
+import androidx.core.view.*
 import com.zzx.headerlayout_kotlin.transformation.AlphaTransformationBehavior
 import com.zzx.headerlayout_kotlin.transformation.ExtendScaleTransformationBehavior
 import com.zzx.headerlayout_kotlin.transformation.TransformationBehavior
-import kotlin.math.max
 
 @DefaultBehavior(HeaderLayout.HeaderLayoutBehavior::class)
 class HeaderLayout @JvmOverloads constructor(
@@ -54,13 +52,23 @@ class HeaderLayout @JvmOverloads constructor(
         STATE_EXTEND_MAX_END
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        maxHeight = measuredHeight
+
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+    }
+
     override fun generateLayoutParams(attrs: AttributeSet?): LayoutParams = LayoutParams(context, attrs)
     override fun generateDefaultLayoutParams(): LayoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
     override fun generateLayoutParams(lp: ViewGroup.LayoutParams?): ViewGroup.LayoutParams =
         LayoutParams(super.generateLayoutParams(lp))
 
 
-    override fun getBehavior(): Behavior<*> = HeaderLayoutBehavior()
+    override fun getBehavior(): Behavior<*> = HeaderLayoutBehavior(context)
 
     private fun dispatchTransformationBehaviors(scrollState: ScrollState, percent: Float = 1.0f) {
         for (child in children) {
@@ -84,7 +92,9 @@ class HeaderLayout @JvmOverloads constructor(
         attrs: AttributeSet? = null
     ) : Behavior<HeaderLayout>(context, attrs) {
 
-        private var fling = false
+        private var childUnConsumedDy = 0
+
+        private var isBackAnimationDo = false
 
         override fun onStartNestedScroll(
             coordinatorLayout: CoordinatorLayout,
@@ -94,7 +104,8 @@ class HeaderLayout @JvmOverloads constructor(
             axes: Int,
             type: Int
         ): Boolean {
-            Log.e(TAG, "onStartNestedScroll -> ")
+            childUnConsumedDy = 0
+            isBackAnimationDo = false
             return ViewCompat.SCROLL_AXIS_VERTICAL and axes != 0
         }
 
@@ -107,29 +118,49 @@ class HeaderLayout @JvmOverloads constructor(
             consumed: IntArray,
             type: Int
         ) {
-            Log.e(TAG, "onNestedPreScroll -> ")
-            if (dy > 0) {
-                consumed[1] = preScrollUp(child, target, dy)
-            } else if (dy < 0) {
-                consumed[1] = preScrollDown(child, target, dy)
+            if (dy > 0 && child.scrollState > ScrollState.STATE_MIN_HEIGHT) {
+                //手指上滑时，HeaderLayout的scrollState大于最小高度状态才有效果
+                consumed[1] = preScrollUp(child, dy)
+            } else if (dy < 0 && childUnConsumedDy < 0 && canScrollDown()) {
+                //手指下滑时，需要等target view滑到顶部且还有未消耗完的dy,才将滑动交给HeaderLayout处理
+                //且分为两种情况，如果是fling产生的滑动，由于每次分发的dy都是剩下未滑动完的位移，需要特殊处理
+                if (type == ViewCompat.TYPE_NON_TOUCH) {
+                    consumed[1] = preScrollDown(child, dy, true)
+                } else {
+                    consumed[1] = preScrollDown(child, dy, false)
+                }
             }
+        }
+
+        private fun canScrollDown(): Boolean {
+            return !isBackAnimationDo
         }
 
         /**
          * 手指下滑
          */
-        private fun preScrollDown(headerLayout: HeaderLayout, target: View, dy: Int): Int {
+        private fun preScrollDown(headerLayout: HeaderLayout, dy: Int, fling: Boolean): Int {
             if (headerLayout.scrollState == ScrollState.STATE_EXTEND_MAX_END) {
+                return 0
+            }
+            if (fling && headerLayout.scrollState >= ScrollState.STATE_MAX_HEIGHT) {
                 return 0
             }
             var consumedDy = 0
             headerLayout.apply {
                 //上滑到了最大拓展高度
                 if (bottom - dy >= maxHeight + extendHeight) {
-                    consumedDy = bottom - (maxHeight + extendHeight)
-                    bottom = maxHeight + extendHeight
-                    scrollState = ScrollState.STATE_EXTEND_MAX_END
-                    dispatchTransformationBehaviors(scrollState)
+                    if (fling && Math.abs(dy) >= (maxHeight + extendHeight - minHeight)) {
+                        bottom = maxHeight
+                        consumedDy = bottom - minHeight
+                        scrollState = ScrollState.STATE_MAX_HEIGHT
+                        dispatchTransformationBehaviors(scrollState)
+                    } else {
+                        consumedDy = bottom - (maxHeight + extendHeight)
+                        bottom = maxHeight + extendHeight
+                        scrollState = ScrollState.STATE_EXTEND_MAX_END
+                        dispatchTransformationBehaviors(scrollState)
+                    }
                 } else {
                     var unConsumedDy = dy
                     if (bottom < maxHeight && bottom - dy < maxHeight) {
@@ -140,11 +171,11 @@ class HeaderLayout @JvmOverloads constructor(
                         dispatchTransformationBehaviors(scrollState, percent)
                     }
                     if (bottom < maxHeight && bottom - dy >= maxHeight) {
-                            consumedDy = bottom - maxHeight
-                            unConsumedDy = dy - consumedDy
-                            bottom = maxHeight
-                            scrollState = ScrollState.STATE_MAX_HEIGHT
-                            dispatchTransformationBehaviors(scrollState)
+                        consumedDy = bottom - maxHeight
+                        unConsumedDy = dy - consumedDy
+                        bottom = maxHeight
+                        scrollState = ScrollState.STATE_MAX_HEIGHT
+                        dispatchTransformationBehaviors(scrollState)
                     }
                     if (bottom >= maxHeight && bottom - unConsumedDy > maxHeight) {
                         if (fling) {
@@ -164,7 +195,7 @@ class HeaderLayout @JvmOverloads constructor(
         /**
          * 手指上滑
          */
-        private fun preScrollUp(headerLayout: HeaderLayout, target: View, dy: Int): Int {
+        private fun preScrollUp(headerLayout: HeaderLayout, dy: Int): Int {
             if (headerLayout.scrollState == ScrollState.STATE_MIN_HEIGHT) {
                 return 0
             }
@@ -206,6 +237,22 @@ class HeaderLayout @JvmOverloads constructor(
             return consumedDy
         }
 
+        private fun backToMaxHeight(headerLayout: HeaderLayout) {
+            if (headerLayout.scrollState <= ScrollState.STATE_MAX_HEIGHT) {
+                return
+            }
+            isBackAnimationDo = true
+            ValueAnimator.ofFloat(headerLayout.bottom.toFloat(), headerLayout.maxHeight.toFloat()).apply {
+                addUpdateListener { animator ->
+                    Log.e(TAG, "backToMaxHeight -> animatedValue = ${animator.animatedValue} bottom=${headerLayout.bottom}")
+                    val dy = (headerLayout.bottom - animator.animatedValue as Float).toInt()
+                    Log.e(TAG, "backToMaxHeight -> dy=$dy")
+                    preScrollUp(headerLayout, dy)
+                }
+                duration = 300L
+            }.start()
+        }
+
         override fun onNestedScroll(
             coordinatorLayout: CoordinatorLayout,
             child: HeaderLayout,
@@ -216,44 +263,7 @@ class HeaderLayout @JvmOverloads constructor(
             dyUnconsumed: Int,
             type: Int
         ) {
-            Log.e(TAG, "onNestedScroll -> dxConsumed=$dxConsumed")
-            Log.e(TAG, "onNestedScroll -> dyConsumed=$dyConsumed")
-            Log.e(TAG, "onNestedScroll -> dxUnconsumed=$dxUnconsumed")
-            Log.e(TAG, "onNestedScroll -> dyUnconsumed=$dyUnconsumed")
-            super.onNestedScroll(
-                coordinatorLayout,
-                child,
-                target,
-                dxConsumed,
-                dyConsumed,
-                dxUnconsumed,
-                dyUnconsumed,
-                type
-            )
-        }
-
-        override fun onNestedPreFling(
-            coordinatorLayout: CoordinatorLayout,
-            child: HeaderLayout,
-            target: View,
-            velocityX: Float,
-            velocityY: Float
-        ): Boolean {
-            Log.e(TAG, "onNestedPreFling -> ")
-            fling = true
-            return super.onNestedPreFling(coordinatorLayout, child, target, velocityX, velocityY)
-        }
-
-        override fun onNestedFling(
-            coordinatorLayout: CoordinatorLayout,
-            child: HeaderLayout,
-            target: View,
-            velocityX: Float,
-            velocityY: Float,
-            consumed: Boolean
-        ): Boolean {
-            Log.e(TAG, "onNestedFling -> ")
-            return super.onNestedFling(coordinatorLayout, child, target, velocityX, velocityY, consumed)
+            childUnConsumedDy = dyUnconsumed
         }
 
         override fun onStopNestedScroll(
@@ -262,8 +272,7 @@ class HeaderLayout @JvmOverloads constructor(
             target: View,
             type: Int
         ) {
-            fling = false
-            super.onStopNestedScroll(coordinatorLayout, child, target, type)
+            backToMaxHeight(child)
         }
     }
 
