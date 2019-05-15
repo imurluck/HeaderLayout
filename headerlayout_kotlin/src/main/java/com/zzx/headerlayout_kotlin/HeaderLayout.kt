@@ -158,7 +158,7 @@ class HeaderLayout @JvmOverloads constructor(
             childUnConsumedDy = 0
             canAcceptFling = true
             canAcceptScroll = true
-            return ViewCompat.SCROLL_AXIS_VERTICAL and axes != 0 && canScrollDown()
+            return ViewCompat.SCROLL_AXIS_VERTICAL and axes != 0
         }
 
         override fun onNestedPreScroll(
@@ -238,7 +238,7 @@ class HeaderLayout @JvmOverloads constructor(
                         bottom -= unConsumedDy
                         scrollState = ScrollState.STATE_EXTEND_PROCESS
                         val percent = (bottom - maxHeight).toFloat() / extendHeight
-                        dispatchTransformationBehaviors(scrollState, consumedDy, percent)
+                        dispatchTransformationBehaviors(scrollState, unConsumedDy, percent)
                     }
                 }
             }
@@ -252,7 +252,7 @@ class HeaderLayout @JvmOverloads constructor(
             if (headerLayout.scrollState == ScrollState.STATE_MIN_HEIGHT) {
                 return 0
             }
-            var consumedDy: Int
+            var consumedDy: Int = 0
             headerLayout.apply {
                 //上滑之后到了最小高度
                 if (bottom - dy <= minHeight) {
@@ -261,28 +261,30 @@ class HeaderLayout @JvmOverloads constructor(
                     scrollState = ScrollState.STATE_MIN_HEIGHT
                     dispatchTransformationBehaviors(scrollState, consumedDy)
                 } else {
-                    consumedDy = dy
                     var unConsumedDy = dy
                     //之前在最大伸展高度与拓展的高度之间，上滑之后还在此区间
                     if (bottom > maxHeight && bottom - dy > maxHeight) {
+                        consumedDy = dy
                         bottom -= dy
                         val percent = (bottom - maxHeight).toFloat() / extendHeight.toFloat()
                         scrollState = ScrollState.STATE_EXTEND_PROCESS
                         dispatchTransformationBehaviors(scrollState, consumedDy, percent)
                     }
-                    //之前在最大伸展高度与拓展的高度之间, 上滑之后小于了最大高度
+                    //在最大伸展高度与拓展的高度之间, 上滑之后小于了最大高度
                     if (bottom > maxHeight && bottom - dy <= maxHeight) {
-                        unConsumedDy = dy - (bottom - maxHeight)
+                        consumedDy = bottom - maxHeight
+                        unConsumedDy = dy - consumedDy
                         bottom = maxHeight
                         scrollState = ScrollState.STATE_MAX_HEIGHT
                         dispatchTransformationBehaviors(scrollState, consumedDy)
                     }
-                    //之前在最小高度和最大高度之间
+                    //在最小高度和最大高度之间
                     if (bottom <= maxHeight && bottom - unConsumedDy < maxHeight) {
+                        consumedDy += unConsumedDy
                         bottom -= unConsumedDy
                         val percent = (bottom - minHeight).toFloat() / (maxHeight - minHeight).toFloat()
                         scrollState = ScrollState.STATE_NORMAL_PROCESS
-                        dispatchTransformationBehaviors(scrollState, consumedDy, percent)
+                        dispatchTransformationBehaviors(scrollState, unConsumedDy, percent)
                     }
                 }
 
@@ -305,7 +307,7 @@ class HeaderLayout @JvmOverloads constructor(
                 doOnEnd {
                     isBackAnimationDo = false
                 }
-                duration = 300L
+                duration = 200L
             }.start()
         }
 
