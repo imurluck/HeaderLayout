@@ -3,22 +3,29 @@ package com.zzx.headerlayout_kotlin
 import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.coordinatorlayout.widget.CoordinatorLayout.DefaultBehavior
 import androidx.coordinatorlayout.widget.CoordinatorLayout.Behavior
+import androidx.coordinatorlayout.widget.CoordinatorLayout.DefaultBehavior
 import androidx.core.animation.doOnEnd
-import androidx.core.view.*
+import androidx.core.view.ViewCompat
+import androidx.core.view.children
+import com.zzx.headerlayout_kotlin.HeaderLayout.ScrollState
 import com.zzx.headerlayout_kotlin.transformation.AlphaTransformationBehavior
 import com.zzx.headerlayout_kotlin.transformation.ExtendScaleTransformationBehavior
 import com.zzx.headerlayout_kotlin.transformation.ScrollTransformationBehavior
 import com.zzx.headerlayout_kotlin.transformation.TransformationBehavior
-import java.lang.IllegalStateException
-
+/**
+ * 头部布局，定义了头部布局的五中状态， 状态信息请看[ScrollState],
+ * 在滑动过程中会将滑动的一些信息传递给[TransformationBehavior], [TransformationBehavior]是
+ * 子View需要设置的，设置了[TransformationBehavior]的子View则会接收到[HeaderLayout]滑动时的一些
+ * 信息，如滑动距离dy等。子View则可以根据这些信息来做相应的改变以达到联动的效果
+ * @author zzx
+ * @createAt 19-5-15
+ */
 @DefaultBehavior(HeaderLayout.HeaderLayoutBehavior::class)
 class HeaderLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -174,7 +181,6 @@ class HeaderLayout @JvmOverloads constructor(
                 consumed[1] = preScrollUp(child, dy)
             } else if (dy < 0 && childUnConsumedDy < 0 && canScrollDown()) {
                 //手指下滑时，需要等target view滑到顶部且还有未消耗完的dy,才将滑动交给HeaderLayout处理
-                //且分为两种情况，如果是fling产生的滑动，由于每次分发的dy都是剩下未滑动完的位移，需要特殊处理
                 if (type == ViewCompat.TYPE_NON_TOUCH && canAcceptFling) {
                     consumed[1] = preScrollDown(child, dy, true)
                 } else if (type == ViewCompat.TYPE_TOUCH && canAcceptScroll) {
@@ -393,7 +399,6 @@ class HeaderLayout @JvmOverloads constructor(
     }
 
     companion object {
-        private const val TAG = "HeaderLayout"
 
         private const val DEFAULT_EXTEND_HEIGHT = 200
     }
