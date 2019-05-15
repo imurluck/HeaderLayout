@@ -76,7 +76,6 @@ class HeaderLayout @JvmOverloads constructor(
     }
 
     fun offsetChild(child: View, dy: Int) {
-        Log.e(TAG, "offsetChild -> dy=$dy")
         (child.layoutParams as LayoutParams).apply {
             if (stickyUntilExit) {
                 var unConsumedDy = dy
@@ -192,7 +191,6 @@ class HeaderLayout @JvmOverloads constructor(
          * 手指下滑
          */
         private fun preScrollDown(headerLayout: HeaderLayout, dy: Int, fling: Boolean): Int {
-            Log.e(TAG, "preScrollDown -> dy=$dy, fling=$fling, state=${headerLayout.scrollState}")
             if (headerLayout.scrollState >= ScrollState.STATE_EXTEND_MAX_END) {
                 return 0
             }
@@ -355,9 +353,9 @@ class HeaderLayout @JvmOverloads constructor(
         constructor(source: FrameLayout.LayoutParams) : super(source)
 
         constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.HeaderLayout_Transformation)
-            transformationFlags = a.getInt(R.styleable.HeaderLayout_Transformation_transformation_behavior, 0x00)
-            stickyUntilExit = a.getBoolean(R.styleable.HeaderLayout_Transformation_sticky_until_exit, false)
+            val a = context.obtainStyledAttributes(attrs, R.styleable.HeaderLayout_Layout)
+            transformationFlags = a.getInt(R.styleable.HeaderLayout_Layout_transformation_behavior, 0x00)
+            stickyUntilExit = a.getBoolean(R.styleable.HeaderLayout_Layout_sticky_until_exit, false)
             parseTransformationBehaviors(transformationFlags)
             a.recycle()
         }

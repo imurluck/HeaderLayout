@@ -23,7 +23,4 @@ class AlphaTransformationBehavior: TransformationBehaviorAdapter<View>() {
         super.onStateMaxHeight(child, parent, unConsumedDy)
     }
 
-    companion object {
-        private const val TAG = "AlphaTransformation"
-    }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:ns1="http://schemas.android.com/tools">
 
-    <declare-styleable name="HeaderLayout_Transformation">
+    <declare-styleable name="HeaderLayout_Layout">
         <attr name="transformation_behavior">
             <flag name="scroll" value="0x01"/>
             <flag name="alpha" value="0x02"/>
