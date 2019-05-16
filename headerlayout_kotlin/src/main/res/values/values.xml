@@ -11,6 +11,6 @@
     </declare-styleable>
 
     <string name="header_layout_scrolling_view_behavior" translatable="false">
-        com.zzx.headerlayout_kotlin.HeaderLayout$ScrollingViewBehavior
+        com.zzx.headerlayout_kotlin.ScrollingViewBehavior
     </string>
 </resources>

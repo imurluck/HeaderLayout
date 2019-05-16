@@ -1,11 +1,14 @@
 package com.zzx.headerlayout
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.VERTICAL
 import com.example.library.BaseAdapter
+import com.zzx.headerlayout.utils.ListProvider
+import com.zzx.headerlayout.wangyiyun.WangYiYunActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -17,6 +20,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         setupRecyclerView()
+
+        headerLayout.setOnClickListener {
+            startActivity(Intent(this@MainActivity, WangYiYunActivity::class.java))
+        }
 
         Log.e(TAG, "onCreate -> $headerLayout")
     }

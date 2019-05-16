@@ -1,4 +1,6 @@
-package com.zzx.headerlayout
+package com.zzx.headerlayout.utils
+
+import com.zzx.headerlayout.StringEntity
 
 object ListProvider {
 

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <com.zzx.headerlayout_kotlin.HeaderLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:src="@drawable/singer"
+                android:scaleType="centerCrop"
+                app:transformation_behavior="scroll|extend_scale"/>
+
+        <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:fitsSystemWindows="true"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                app:contentInsetStartWithNavigation="10dp"
+                app:title="@string/app_name"
+                app:sticky_until_exit="true"/>
+
+        <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:padding="20dp"
+                app:transformation_behavior="scroll"
+                android:layout_marginBottom="40dp">
+
+            <TextView
+                    android:id="@+id/singerName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="陈奕迅"
+                    style="@style/TextAppearance.AppCompat.Body1"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+            />
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="被收藏6666次"
+                    style="@style/TextAppearance.AppCompat.Caption"
+                    android:layout_below="@id/singerName"
+                    android:textColor="@android:color/white"
+                    android:layout_marginTop="10dp"/>
+
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="30dp"
+                      android:text="收藏"
+                      android:paddingStart="20dp"
+                      android:paddingEnd="20dp"
+                      android:background="@drawable/light_red_20dp"
+                      android:layout_alignParentEnd="true"
+                      style="@style/TextAppearance.AppCompat.Body2"
+                      android:textColor="@android:color/white"
+                      android:drawableLeft="@drawable/ic_add_white_16dp"
+                      android:drawablePadding="5dp"
+                      android:gravity="center_vertical"
+            />
+        </RelativeLayout>
+
+        <net.lucode.hackware.magicindicator.MagicIndicator
+                android:id="@+id/indicator"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@drawable/white_top_10dp"
+                android:layout_gravity="bottom"
+                app:transformation_behavior="scroll"
+                app:sticky_until_exit="true"/>
+
+    </com.zzx.headerlayout_kotlin.HeaderLayout>
+
+    <androidx.viewpager.widget.ViewPager
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/header_layout_scrolling_view_behavior"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

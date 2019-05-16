@@ -31,6 +31,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     implementation 'androidx.recyclerview:recyclerview:1.0.0-alpha1'
     implementation 'com.zzx:BaseAdapter:2.1.7'
+    implementation 'com.github.hackware1993:MagicIndicator:1.6.0'
     androidTestImplementation 'androidx.test:runner:1.1.0-alpha4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0-alpha4'
     implementation project(':headerlayout_kotlin')

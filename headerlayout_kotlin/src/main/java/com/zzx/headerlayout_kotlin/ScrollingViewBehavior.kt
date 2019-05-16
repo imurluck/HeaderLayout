@@ -1,17 +1,16 @@
 package com.zzx.headerlayout_kotlin
 
 import android.content.Context
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.view.ViewCompat
+import androidx.core.view.*
 
 class ScrollingViewBehavior<V : View>(
     context: Context,
     attrs: AttributeSet
 ) : CoordinatorLayout.Behavior<V>(context, attrs) {
-
-    private var originTopMargin = 0
 
     override fun layoutDependsOn(parent: CoordinatorLayout, child: V, dependency: View): Boolean {
         return dependency is HeaderLayout
@@ -26,12 +25,42 @@ class ScrollingViewBehavior<V : View>(
         return false
     }
 
+    override fun onMeasureChild(
+        parent: CoordinatorLayout,
+        child: V,
+        parentWidthMeasureSpec: Int,
+        widthUsed: Int,
+        parentHeightMeasureSpec: Int,
+        heightUsed: Int
+    ): Boolean {
+        val headerLayout = findFirstDependency(parent.getDependencies(child))
+        if (headerLayout != null) {
+            val headerLayoutParams = headerLayout.layoutParams as CoordinatorLayout.LayoutParams
+            val childLayoutParams = child.layoutParams as CoordinatorLayout.LayoutParams
+            val childWidthMeasureSpec = CoordinatorLayout.getChildMeasureSpec(
+                parentWidthMeasureSpec,
+                parent.paddingLeft + parent.paddingRight + child.marginLeft + child.marginRight,
+                childLayoutParams.width
+            )
+            val childHeightMeasureSpec = CoordinatorLayout.getChildMeasureSpec(
+                parentHeightMeasureSpec,
+                parent.paddingTop + parent.paddingBottom + child.marginTop + child.marginBottom +
+                        headerLayout.minHeight + headerLayoutParams.topMargin + headerLayoutParams.bottomMargin,
+                childLayoutParams.height
+            )
+            child.measure(childWidthMeasureSpec, childHeightMeasureSpec)
+            return true
+        }
+        return false
+    }
+
     private fun offsetChildAsNeed(child: V, dependency: View) {
         val dependencyBehavior = (dependency.layoutParams as CoordinatorLayout.LayoutParams).behavior
         if (dependencyBehavior is HeaderLayout.HeaderLayoutBehavior) {
             val dependencyParams = dependency.layoutParams as CoordinatorLayout.LayoutParams
+            val childLayoutParams = child.layoutParams as CoordinatorLayout.LayoutParams
             val offset = (dependency.bottom + dependencyParams.bottomMargin +
-                    originTopMargin) - child.top
+                    childLayoutParams.topMargin) - child.top
             ViewCompat.offsetTopAndBottom(child, offset)
         }
     }
@@ -41,16 +70,17 @@ class ScrollingViewBehavior<V : View>(
         return if (headerLayout != null) {
             val headerLayoutParams =  headerLayout.layoutParams as CoordinatorLayout.LayoutParams
             val childLayoutParams = child.layoutParams as CoordinatorLayout.LayoutParams
-            headerLayoutParams.apply {
-                originTopMargin = childLayoutParams.topMargin
-                childLayoutParams.topMargin += topMargin + height + bottomMargin
-            }
-            false
+            val out = Rect()
+            out.left = childLayoutParams.leftMargin
+            out.top = headerLayout.bottom + headerLayoutParams.bottomMargin + childLayoutParams.topMargin
+            out.right = out.left + child.measuredWidth
+            out.bottom = out.top + child.measuredHeight
+            child.layout(out.left, out.top, out.right, out.bottom)
+            true
         } else {
             super.onLayoutChild(parent, child, layoutDirection)
         }
     }
-
 
 
     private fun findFirstDependency(dependencies: List<View>): HeaderLayout? {
@@ -60,5 +90,9 @@ class ScrollingViewBehavior<V : View>(
             }
         }
         return null
+    }
+
+    companion object {
+        private const val TAG = "ScrollingViewBehavior"
     }
 }
