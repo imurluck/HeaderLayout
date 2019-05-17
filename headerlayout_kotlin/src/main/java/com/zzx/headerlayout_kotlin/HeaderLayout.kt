@@ -39,6 +39,14 @@ class HeaderLayout @JvmOverloads constructor(
 
     private var scrollState = ScrollState.STATE_MAX_HEIGHT
 
+    var hasLayouted = false
+
+    init {
+        post {
+            hasLayouted = true
+        }
+    }
+
     enum class ScrollState {
         /**
          * 收缩到了最小高度
@@ -63,14 +71,23 @@ class HeaderLayout @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        maxHeight = measuredHeight
-        if (maxHeight == 0) {
-            throw IllegalStateException("the height of HeaderLayout can't be 0")
+        if (height != 0) {
+            val realHeightMeasureSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+            super.onMeasure(widthMeasureSpec, realHeightMeasureSpec)
+        } else {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+            maxHeight = measuredHeight
+            if (maxHeight == 0) {
+                throw IllegalStateException("the height of HeaderLayout can't be 0")
+            }
         }
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        if (changed) {
+            //表示是由requestLayout引发的，不需要重新布局子View
+            return
+        }
         super.onLayout(changed, left, top, right, bottom)
         minHeight = 0
         for (child in children) {
@@ -166,6 +183,17 @@ class HeaderLayout @JvmOverloads constructor(
             canAcceptFling = true
             canAcceptScroll = true
             return ViewCompat.SCROLL_AXIS_VERTICAL and axes != 0
+        }
+
+        override fun onLayoutChild(parent: CoordinatorLayout, child: HeaderLayout, layoutDirection: Int): Boolean {
+            return if (child.hasLayouted) {
+                //第一次布局加载完成之后，因requestLayout造成的再次layout应是上一次的位置，
+                // 需要保持滑动后的原样
+                child.layout(child.left, child.top, child.right, child.bottom)
+                true
+            } else {
+                super.onLayoutChild(parent, child, layoutDirection)
+            }
         }
 
         override fun onNestedPreScroll(

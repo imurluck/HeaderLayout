@@ -16,7 +16,6 @@ class WangYiYunActivity: AppCompatActivity() {
         QMUIStatusBarHelper.translucent(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_wang_yi_yun)
-
         setupToolbar()
 
         setupViewPager()
