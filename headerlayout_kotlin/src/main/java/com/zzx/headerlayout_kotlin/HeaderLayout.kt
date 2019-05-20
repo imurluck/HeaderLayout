@@ -1,11 +1,16 @@
 package com.zzx.headerlayout_kotlin
 
 import android.animation.ValueAnimator
+import android.app.Service
 import android.content.Context
 import android.util.AttributeSet
+import android.util.DisplayMetrics
+import android.util.TypedValue
+import android.util.TypedValue.*
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout.Behavior
@@ -14,10 +19,8 @@ import androidx.core.animation.doOnEnd
 import androidx.core.view.ViewCompat
 import androidx.core.view.children
 import com.zzx.headerlayout_kotlin.HeaderLayout.ScrollState
-import com.zzx.headerlayout_kotlin.transformation.AlphaTransformationBehavior
-import com.zzx.headerlayout_kotlin.transformation.ExtendScaleTransformationBehavior
-import com.zzx.headerlayout_kotlin.transformation.ScrollTransformationBehavior
-import com.zzx.headerlayout_kotlin.transformation.TransformationBehavior
+import com.zzx.headerlayout_kotlin.transformation.*
+
 /**
  * 头部布局，定义了头部布局的五中状态， 状态信息请看[ScrollState],
  * 在滑动过程中会将滑动的一些信息传递给[TransformationBehavior], [TransformationBehavior]是
@@ -37,14 +40,34 @@ class HeaderLayout @JvmOverloads constructor(
 
     var extendHeight = DEFAULT_EXTEND_HEIGHT
 
+    var extendHeightFraction = 0.0f
+
     private var scrollState = ScrollState.STATE_MAX_HEIGHT
 
     var hasLayouted = false
 
     init {
+        val a = context.obtainStyledAttributes(attrs, R.styleable.HeaderLayout)
+        val extendHeightValue = TypedValue()
+        val hasValue = a.getValue(R.styleable.HeaderLayout_extend_height, extendHeightValue)
+        if (hasValue) {
+            extendHeightValue.apply {
+                when (type) {
+                    TYPE_FRACTION -> extendHeightFraction = getFraction(1.0f, 1.0f)
+                    TYPE_FLOAT -> extendHeightFraction = float
+                    TYPE_DIMENSION -> extendHeight = getDimension(getDisplayMetrics(context)).toInt()
+                }
+            }
+        }
         post {
             hasLayouted = true
         }
+    }
+
+    private fun getDisplayMetrics(context: Context): DisplayMetrics {
+        val displayMetrics = DisplayMetrics()
+        (context.getSystemService(Service.WINDOW_SERVICE) as WindowManager).defaultDisplay.getMetrics(displayMetrics)
+        return displayMetrics
     }
 
     enum class ScrollState {
@@ -71,20 +94,19 @@ class HeaderLayout @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        if (height != 0) {
-            val realHeightMeasureSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-            super.onMeasure(widthMeasureSpec, realHeightMeasureSpec)
-        } else {
-            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-            maxHeight = measuredHeight
-            if (maxHeight == 0) {
-                throw IllegalStateException("the height of HeaderLayout can't be 0")
-            }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        maxHeight = measuredHeight
+        if (extendHeightFraction != 0.0f) {
+            extendHeight = (maxHeight * extendHeightFraction).toInt()
         }
+        if (maxHeight == 0) {
+            throw IllegalStateException("the height of HeaderLayout can't be 0")
+        }
+
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        if (changed) {
+        if (hasLayouted) {
             //表示是由requestLayout引发的，不需要重新布局子View
             return
         }
@@ -167,6 +189,8 @@ class HeaderLayout @JvmOverloads constructor(
 
         private var isBackAnimationDo = false
 
+        private var backAnimation: ValueAnimator? = null
+
         private var canAcceptFling = false
 
         private var canAcceptScroll = false
@@ -179,10 +203,24 @@ class HeaderLayout @JvmOverloads constructor(
             axes: Int,
             type: Int
         ): Boolean {
-            childUnConsumedDy = 0
-            canAcceptFling = true
-            canAcceptScroll = true
-            return ViewCompat.SCROLL_AXIS_VERTICAL and axes != 0
+            if (ViewCompat.SCROLL_AXIS_VERTICAL and axes != 0) {
+                childUnConsumedDy = 0
+                canAcceptFling = true
+                canAcceptScroll = true
+                resetBackAnimation()
+                return true
+            }
+
+            return false
+        }
+
+        private fun resetBackAnimation() {
+            backAnimation?.apply {
+                if (isRunning) {
+                    backAnimation!!.cancel()
+                    isBackAnimationDo = false
+                }
+            }
         }
 
         override fun onLayoutChild(parent: CoordinatorLayout, child: HeaderLayout, layoutDirection: Int): Boolean {
@@ -332,7 +370,7 @@ class HeaderLayout @JvmOverloads constructor(
             isBackAnimationDo = true
             canAcceptFling = false
             canAcceptScroll = false
-            ValueAnimator.ofFloat(headerLayout.bottom.toFloat(), headerLayout.maxHeight.toFloat()).apply {
+            backAnimation = ValueAnimator.ofFloat(headerLayout.bottom.toFloat(), headerLayout.maxHeight.toFloat()).apply {
                 addUpdateListener { animator ->
                     val dy = (headerLayout.bottom - animator.animatedValue as Float).toInt()
                     preScrollUp(headerLayout, dy)
@@ -341,7 +379,8 @@ class HeaderLayout @JvmOverloads constructor(
                     isBackAnimationDo = false
                 }
                 duration = 200L
-            }.start()
+            }
+            backAnimation!!.start()
         }
 
         override fun onNestedScroll(
@@ -410,8 +449,14 @@ class HeaderLayout @JvmOverloads constructor(
                 if (transformationFlags and TRANSFORMATION_EXTEND_SCALE != 0) {
                     add(ExtendScaleTransformationBehavior())
                 }
+                if (transformationFlags and TRANSFORMATION_ALPHA_CONTRARY != 0) {
+                    add(AlphaContraryTransformatBehavior())
+                }
                 if (transformationFlags and TRANSFORMATION_SCROLL != 0) {
                     add(ScrollTransformationBehavior())
+                }
+                if (transformationFlags and TRANSFORMATION_COMMON_TOOLBAR != 0) {
+                    add(CommonToolbarTransformationBehavior())
                 }
             }
         }
@@ -421,7 +466,9 @@ class HeaderLayout @JvmOverloads constructor(
             private const val TRANSFORMATION_NOTHING = 0x00
             private const val TRANSFORMATION_SCROLL = 0x01
             private const val TRANSFORMATION_ALPHA = 0x02
-            private const val TRANSFORMATION_EXTEND_SCALE = 0x04
+            private const val TRANSFORMATION_ALPHA_CONTRARY = 0x04
+            private const val TRANSFORMATION_EXTEND_SCALE = 0x08
+            private const val TRANSFORMATION_COMMON_TOOLBAR = 0x10
         }
 
 

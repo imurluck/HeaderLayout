@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:ns1="http://schemas.android.com/tools">
 
+    <declare-styleable name="HeaderLayout">
+        <attr name="extend_height" format="fraction|dimension|float"/>
+    </declare-styleable>
+
     <declare-styleable name="HeaderLayout_Layout">
         <attr name="transformation_behavior">
             <flag name="scroll" value="0x01"/>
             <flag name="alpha" value="0x02"/>
-            <flag name="extend_scale" value="0x04"/>
+            <flag name="alpha_contrary" value="0x04"/>
+            <flag name="extend_scale" value="0x08"/>
+            <flag name="common_toolbar" value="0x10"/>
         </attr>
         <attr name="sticky_until_exit" format="boolean"/>
     </declare-styleable>

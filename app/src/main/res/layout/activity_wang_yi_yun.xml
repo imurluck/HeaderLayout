@@ -7,7 +7,8 @@
 
     <com.zzx.headerlayout_kotlin.HeaderLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:extend_height="30%">
 
         <androidx.appcompat.widget.AppCompatImageView
                 android:layout_width="match_parent"
@@ -15,16 +16,6 @@
                 android:src="@drawable/singer"
                 android:scaleType="centerCrop"
                 app:transformation_behavior="scroll|extend_scale"/>
-
-        <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:fitsSystemWindows="true"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-                app:contentInsetStartWithNavigation="10dp"
-                app:title="@string/app_name"
-                app:sticky_until_exit="true"/>
 
         <RelativeLayout
                 android:layout_width="match_parent"
@@ -67,6 +58,33 @@
                       android:gravity="center_vertical"
             />
         </RelativeLayout>
+
+        <View
+                android:background="@android:color/background_dark"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:alpha="0"
+                app:transformation_behavior="alpha_contrary"/>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:fitsSystemWindows="true"
+                android:layout_height="wrap_content"
+                app:sticky_until_exit="true"
+                app:transformation_behavior="common_toolbar">
+
+            <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:fitsSystemWindows="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                    app:contentInsetStartWithNavigation="10dp"
+                    app:title="陈奕迅"/>
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+
 
         <net.lucode.hackware.magicindicator.MagicIndicator
                 android:id="@+id/indicator"

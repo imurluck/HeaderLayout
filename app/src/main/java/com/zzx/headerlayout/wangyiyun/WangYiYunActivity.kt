@@ -1,7 +1,9 @@
 package com.zzx.headerlayout.wangyiyun
 
 import android.os.Bundle
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import com.example.dovebookui.widget.IndicatorAdapter
 import com.zzx.headerlayout.R
@@ -44,5 +46,15 @@ class WangYiYunActivity: AppCompatActivity() {
     private fun setupToolbar() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        hideTitleView(toolbar)
+    }
+
+    private fun hideTitleView(toolbar: Toolbar) {
+        val field = toolbar.javaClass.getDeclaredField("mTitleTextView")
+        field.isAccessible = true
+        val titleTextView = field.get(toolbar)
+        if (titleTextView != null) {
+            (titleTextView as TextView).alpha = 0.0f
+        }
     }
 }
