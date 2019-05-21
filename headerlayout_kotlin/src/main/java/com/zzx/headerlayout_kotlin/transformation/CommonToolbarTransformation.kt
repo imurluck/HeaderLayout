@@ -1,6 +1,5 @@
 package com.zzx.headerlayout_kotlin.transformation
 
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -8,7 +7,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.children
 import com.zzx.headerlayout_kotlin.HeaderLayout
 
-class CommonToolbarTransformationBehavior: TransformationBehaviorAdapter<View>() {
+class CommonToolbarTransformation: TransformationAdapter<View>() {
 
     private var titleTextView: TextView? = null
 

@@ -23,8 +23,8 @@ import com.zzx.headerlayout_kotlin.transformation.*
 
 /**
  * 头部布局，定义了头部布局的五中状态， 状态信息请看[ScrollState],
- * 在滑动过程中会将滑动的一些信息传递给[TransformationBehavior], [TransformationBehavior]是
- * 子View需要设置的，设置了[TransformationBehavior]的子View则会接收到[HeaderLayout]滑动时的一些
+ * 在滑动过程中会将滑动的一些信息传递给[Transformation], [Transformation]是
+ * 子View需要设置的，设置了[Transformation]的子View则会接收到[HeaderLayout]滑动时的一些
  * 信息，如滑动距离dy等。子View则可以根据这些信息来做相应的改变以达到联动的效果
  * @author zzx
  * @createAt 19-5-15
@@ -45,6 +45,8 @@ class HeaderLayout @JvmOverloads constructor(
     private var scrollState = ScrollState.STATE_MAX_HEIGHT
 
     var hasLayouted = false
+
+    var onFlingMaxHeight: ((HeaderLayout) -> Unit)? = null
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.HeaderLayout)
@@ -166,8 +168,8 @@ class HeaderLayout @JvmOverloads constructor(
     private fun dispatchTransformationBehaviors(scrollState: ScrollState, dy: Int, percent: Float = 1.0f) {
         for (child in children) {
             val layoutParams = child.layoutParams as LayoutParams
-            if (layoutParams.transformationBehaviors != null && layoutParams.transformationBehaviors!!.size > 0) {
-                for (behavior in layoutParams.transformationBehaviors!!) {
+            if (layoutParams.transformations != null && layoutParams.transformations!!.size > 0) {
+                for (behavior in layoutParams.transformations!!) {
                     when (scrollState) {
                         ScrollState.STATE_MIN_HEIGHT -> behavior.onStateMinHeight(child, this, dy)
                         ScrollState.STATE_NORMAL_PROCESS -> behavior.onStateNormalProcess(child, this, percent, dy)
@@ -192,6 +194,8 @@ class HeaderLayout @JvmOverloads constructor(
         private var backAnimation: ValueAnimator? = null
 
         private var canAcceptFling = false
+
+        private var canAcceptFlingCallback = false
 
         private var canAcceptScroll = false
 
@@ -303,6 +307,12 @@ class HeaderLayout @JvmOverloads constructor(
                     }
                     if (bottom >= maxHeight && bottom - unConsumedDy > maxHeight) {
                         if (fling) {
+                            //告诉fling监听者，已fling到maxHeight处
+                            if (canAcceptFlingCallback && headerLayout.onFlingMaxHeight != null) {
+                                headerLayout.onFlingMaxHeight!!.invoke(headerLayout)
+                                canAcceptFlingCallback = false
+                            }
+                            return 0
                             return@apply
                         }
                         consumedDy += unConsumedDy
@@ -383,6 +393,19 @@ class HeaderLayout @JvmOverloads constructor(
             backAnimation!!.start()
         }
 
+        override fun onNestedPreFling(
+            coordinatorLayout: CoordinatorLayout,
+            child: HeaderLayout,
+            target: View,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
+            if (child.scrollState < ScrollState.STATE_MAX_HEIGHT) {
+                canAcceptFlingCallback = true
+            }
+            return super.onNestedPreFling(coordinatorLayout, child, target, velocityX, velocityY)
+        }
+
         override fun onNestedScroll(
             coordinatorLayout: CoordinatorLayout,
             child: HeaderLayout,
@@ -405,6 +428,9 @@ class HeaderLayout @JvmOverloads constructor(
             if (type == ViewCompat.TYPE_TOUCH) {
                 backToMaxHeight(child)
             }
+            if (type == ViewCompat.TYPE_NON_TOUCH) {
+                canAcceptFlingCallback = false
+            }
         }
     }
 
@@ -412,7 +438,7 @@ class HeaderLayout @JvmOverloads constructor(
 
         private var transformationFlags = 0x00
 
-        var transformationBehaviors: MutableList<TransformationBehavior<View>>? = null
+        var transformations: MutableList<Transformation<View>>? = null
 
         var minTop = 0
 
@@ -435,28 +461,28 @@ class HeaderLayout @JvmOverloads constructor(
         }
 
         /**
-         * 解析在xml中设置的transformation_behavior,解析成[TransformationBehavior]存储在[transformationBehaviors]中，
-         * 在behavior分发时会遍历[transformationBehaviors]进行分发
+         * 解析在xml中设置的transformation_behavior,解析成[Transformation]存储在[transformations]中，
+         * 在behavior分发时会遍历[transformations]进行分发
          */
         private fun parseTransformationBehaviors(transformationFlags: Int) {
             if (transformationFlags and TRANSFORMATION_NOTHING != 0) {
                 return
             }
-            transformationBehaviors = mutableListOf<TransformationBehavior<View>>().apply {
+            transformations = mutableListOf<Transformation<View>>().apply {
                 if (transformationFlags and TRANSFORMATION_ALPHA != 0) {
-                    add(AlphaTransformationBehavior())
+                    add(AlphaTransformation())
                 }
                 if (transformationFlags and TRANSFORMATION_EXTEND_SCALE != 0) {
-                    add(ExtendScaleTransformationBehavior())
+                    add(ExtendScaleTransformation())
                 }
                 if (transformationFlags and TRANSFORMATION_ALPHA_CONTRARY != 0) {
-                    add(AlphaContraryTransformatBehavior())
+                    add(AlphaContraryTransformation())
                 }
                 if (transformationFlags and TRANSFORMATION_SCROLL != 0) {
-                    add(ScrollTransformationBehavior())
+                    add(ScrollTransformation())
                 }
                 if (transformationFlags and TRANSFORMATION_COMMON_TOOLBAR != 0) {
-                    add(CommonToolbarTransformationBehavior())
+                    add(CommonToolbarTransformation())
                 }
             }
         }

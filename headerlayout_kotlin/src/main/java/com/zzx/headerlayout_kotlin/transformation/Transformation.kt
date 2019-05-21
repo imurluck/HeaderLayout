@@ -3,7 +3,7 @@ package com.zzx.headerlayout_kotlin.transformation
 import android.view.View
 import com.zzx.headerlayout_kotlin.HeaderLayout
 
-interface TransformationBehavior<in V: View> {
+interface Transformation<in V: View> {
     /**
      * @see [HeaderLayout.scrollState]为STATE_MIN_HEIGHT, 这个方法回调表示[HeaderLayout]的Bottom已经收缩到了最小高度
      * @param child 当前需要做变换的view

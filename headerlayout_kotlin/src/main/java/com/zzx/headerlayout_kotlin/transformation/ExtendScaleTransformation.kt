@@ -3,7 +3,7 @@ package com.zzx.headerlayout_kotlin.transformation
 import android.view.View
 import com.zzx.headerlayout_kotlin.HeaderLayout
 
-class ExtendScaleTransformationBehavior: TransformationBehaviorAdapter<View>() {
+class ExtendScaleTransformation: TransformationAdapter<View>() {
 
     override fun onStateMaxHeight(child: View, parent: HeaderLayout, unConsumedDy: Int) {
         child.scaleX = 1.0f

@@ -16,7 +16,5 @@
         <attr name="sticky_until_exit" format="boolean"/>
     </declare-styleable>
 
-    <string name="header_layout_scrolling_view_behavior" translatable="false">
-        com.zzx.headerlayout_kotlin.ScrollingViewBehavior
-    </string>
+    <string name="header_layout_scrolling_view_behavior" translatable="false">com.zzx.headerlayout_kotlin.ScrollingViewBehavior</string>
 </resources>

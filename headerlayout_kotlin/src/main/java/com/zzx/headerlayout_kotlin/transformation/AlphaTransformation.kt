@@ -3,7 +3,7 @@ package com.zzx.headerlayout_kotlin.transformation
 import android.view.View
 import com.zzx.headerlayout_kotlin.HeaderLayout
 
-class AlphaTransformationBehavior: TransformationBehaviorAdapter<View>() {
+class AlphaTransformation: TransformationAdapter<View>() {
 
     override fun onStateMinHeight(
         child: View,
