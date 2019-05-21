@@ -6,15 +6,16 @@
     </declare-styleable>
 
     <declare-styleable name="HeaderLayout_Layout">
-        <attr name="transformation_behavior">
+        <attr name="transformation">
             <flag name="scroll" value="0x01"/>
             <flag name="alpha" value="0x02"/>
             <flag name="alpha_contrary" value="0x04"/>
             <flag name="extend_scale" value="0x08"/>
             <flag name="common_toolbar" value="0x10"/>
         </attr>
+        <attr name="custom_transformation" format="string"/>
         <attr name="sticky_until_exit" format="boolean"/>
     </declare-styleable>
 
-    <string name="header_layout_scrolling_view_behavior" translatable="false">com.zzx.headerlayout_kotlin.ScrollingViewBehavior</string>
+    <string name="header_layout_scrolling_view_behavior">com.zzx.headerlayout_kotlin.ScrollingViewBehavior</string>
 </resources>

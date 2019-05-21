@@ -4,6 +4,8 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
+apply plugin: 'com.novoda.bintray-release'
+
 android {
     compileSdkVersion 28
 
@@ -38,4 +40,20 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.0-alpha4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0-alpha4'
+}
+
+tasks.withType(Javadoc) {
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addStringOption('encoding', 'UTF-8')
+    options.addStringOption('charSet', 'UTF-8')
+}
+
+publish {
+    repoName = 'HeaderLayout'
+    userOrg = 'neuzzx'
+    groupId = 'com.imurluck'
+    artifactId = 'headerlayout'
+    publishVersion = '1.0.0'
+    desc = ''
+    website = 'https://github.com/imurluck/HeaderLayout'
 }

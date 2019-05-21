@@ -15,14 +15,15 @@
                 android:layout_height="300dp"
                 android:src="@drawable/singer"
                 android:scaleType="centerCrop"
-                app:transformation_behavior="scroll|extend_scale"/>
+                app:transformation="scroll|extend_scale"
+                />
 
         <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:padding="20dp"
-                app:transformation_behavior="scroll"
+                app:transformation="scroll"
                 android:layout_marginBottom="40dp">
 
             <TextView
@@ -32,8 +33,7 @@
                     android:text="陈奕迅"
                     style="@style/TextAppearance.AppCompat.Body1"
                     android:textColor="@android:color/white"
-                    android:textStyle="bold"
-            />
+                    android:textStyle="bold"/>
 
             <TextView
                     android:layout_width="wrap_content"
@@ -44,18 +44,19 @@
                     android:textColor="@android:color/white"
                     android:layout_marginTop="10dp"/>
 
-            <TextView android:layout_width="wrap_content"
-                      android:layout_height="30dp"
-                      android:text="收藏"
-                      android:paddingStart="20dp"
-                      android:paddingEnd="20dp"
-                      android:background="@drawable/light_red_20dp"
-                      android:layout_alignParentEnd="true"
-                      style="@style/TextAppearance.AppCompat.Body2"
-                      android:textColor="@android:color/white"
-                      android:drawableLeft="@drawable/ic_add_white_16dp"
-                      android:drawablePadding="5dp"
-                      android:gravity="center_vertical"
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:text="收藏"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:background="@drawable/light_red_20dp"
+                    android:layout_alignParentEnd="true"
+                    style="@style/TextAppearance.AppCompat.Body2"
+                    android:textColor="@android:color/white"
+                    android:drawableLeft="@drawable/ic_add_white_16dp"
+                    android:drawablePadding="5dp"
+                    android:gravity="center_vertical"
             />
         </RelativeLayout>
 
@@ -64,7 +65,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
                 android:alpha="0"
-                app:transformation_behavior="alpha_contrary"/>
+                app:transformation="alpha_contrary"/>
 
         <androidx.appcompat.widget.LinearLayoutCompat
                 android:orientation="vertical"
@@ -72,7 +73,7 @@
                 android:fitsSystemWindows="true"
                 android:layout_height="wrap_content"
                 app:sticky_until_exit="true"
-                app:transformation_behavior="common_toolbar">
+                app:transformation="common_toolbar">
 
             <androidx.appcompat.widget.Toolbar
                     android:id="@+id/toolbar"
@@ -85,15 +86,14 @@
         </androidx.appcompat.widget.LinearLayoutCompat>
 
 
-
         <net.lucode.hackware.magicindicator.MagicIndicator
                 android:id="@+id/indicator"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:background="@drawable/white_top_10dp"
                 android:layout_gravity="bottom"
-                app:transformation_behavior="scroll"
-                app:sticky_until_exit="true"/>
+                app:sticky_until_exit="true"
+                app:custom_transformation="com.zzx.headerlayout_kotlin.transformation.ScrollTransformation"/>
 
     </com.zzx.headerlayout_kotlin.HeaderLayout>
 

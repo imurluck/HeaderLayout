@@ -3,6 +3,7 @@ package com.zzx.headerlayout_kotlin
 import android.animation.ValueAnimator
 import android.app.Service
 import android.content.Context
+import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.util.TypedValue
@@ -61,6 +62,7 @@ class HeaderLayout @JvmOverloads constructor(
                 }
             }
         }
+        a.recycle()
         post {
             hasLayouted = true
         }
@@ -436,7 +438,8 @@ class HeaderLayout @JvmOverloads constructor(
 
     class LayoutParams : FrameLayout.LayoutParams {
 
-        private var transformationFlags = 0x00
+        private var transformationFlags = TRANSFORMATION_NOTHING
+        private var customTransformation: String? = null
 
         var transformations: MutableList<Transformation<View>>? = null
 
@@ -454,9 +457,10 @@ class HeaderLayout @JvmOverloads constructor(
 
         constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.HeaderLayout_Layout)
-            transformationFlags = a.getInt(R.styleable.HeaderLayout_Layout_transformation_behavior, 0x00)
+            transformationFlags = a.getInt(R.styleable.HeaderLayout_Layout_transformation, 0x00)
             stickyUntilExit = a.getBoolean(R.styleable.HeaderLayout_Layout_sticky_until_exit, false)
-            parseTransformationBehaviors(transformationFlags)
+            customTransformation = a.getString(R.styleable.HeaderLayout_Layout_custom_transformation)
+            parseTransformationBehaviors(transformationFlags, customTransformation)
             a.recycle()
         }
 
@@ -464,7 +468,7 @@ class HeaderLayout @JvmOverloads constructor(
          * 解析在xml中设置的transformation_behavior,解析成[Transformation]存储在[transformations]中，
          * 在behavior分发时会遍历[transformations]进行分发
          */
-        private fun parseTransformationBehaviors(transformationFlags: Int) {
+        private fun parseTransformationBehaviors(transformationFlags: Int, customTransformation: String?) {
             if (transformationFlags and TRANSFORMATION_NOTHING != 0) {
                 return
             }
@@ -484,7 +488,19 @@ class HeaderLayout @JvmOverloads constructor(
                 if (transformationFlags and TRANSFORMATION_COMMON_TOOLBAR != 0) {
                     add(CommonToolbarTransformation())
                 }
+                if (!TextUtils.isEmpty(customTransformation)) {
+                    add(reflectCustomTransformation(customTransformation!!))
+                }
             }
+        }
+
+        /**
+         * 反射创建Transformation, 并且不捕获异常
+         * @param customTransformation Transformation子类的全路径
+         */
+        private fun reflectCustomTransformation(customTransformation: String): Transformation<View> {
+            val clazz = Class.forName(customTransformation)
+            return clazz.getDeclaredConstructor().newInstance() as Transformation<View>
         }
 
         companion object {
