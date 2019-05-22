@@ -53,7 +53,7 @@ publish {
     userOrg = 'neuzzx'
     groupId = 'com.imurluck'
     artifactId = 'headerlayout'
-    publishVersion = '1.0.0'
+    publishVersion = '1.0.1'
     desc = ''
     website = 'https://github.com/imurluck/HeaderLayout'
 }
