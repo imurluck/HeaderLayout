@@ -24,6 +24,7 @@
   ```
 
 - 编写布局
+
 　　HeaderLayout继承自FrameLayout,且并没有改写FrameLayout的测量和布局逻辑，所以子控件的布局方式和FrameLayout相同即可，我们只需要关注HeaderLayout新增的几个属性。这里以效果图为例。
 
   ```xml
@@ -187,7 +188,6 @@ interface Transformation<in V: View> {
 ### Tips
 
 ------------------------
-　　
 　　开发者在使用app:transformation和app:sticky_untila_exit等属性时，最好用AppCompatImageView代替ImageView，AppCompatTextView代替TextView，这样在XML文件中则不会因为系统控件无法使用自定义属性而报红线，即使报红线也不会影响程序正常的执行，只是看着别扭。
 
 
