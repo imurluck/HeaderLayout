@@ -17,13 +17,13 @@
 
 ​　　效果图中所有的头部控件滑动联动效果都只需要在xml中配置几行代码即可完成，由于HeaderLayout是根据CoordinatorLayout的机制来实现的，所以HeaderLayout需要包裹在CoordinatorLayout中才会有效果。
 
-- 引入依赖[ ![Download](https://api.bintray.com/packages/neuzzx/HeaderLayout/headerlayout/images/download.svg) ](https://bintray.com/neuzzx/HeaderLayout/headerlayout/_latestVersion)
+#### 引入依赖[ ![Download](https://api.bintray.com/packages/neuzzx/HeaderLayout/headerlayout/images/download.svg) ](https://bintray.com/neuzzx/HeaderLayout/headerlayout/_latestVersion)
 
   ```xml
   implementation "com.imurluck:headerlayout:$lastVersion"
   ```
 
-- 编写布局
+#### 编写布局
 
 　　HeaderLayout继承自FrameLayout,且并没有改写FrameLayout的测量和布局逻辑，所以子控件的布局方式和FrameLayout相同即可，我们只需要关注HeaderLayout新增的几个属性。这里以效果图为例。
 
@@ -61,9 +61,10 @@
   ```
 
 　　如上所示，HeaderLayout工作在CoordinatorLayout中并且是其直接子View。ViewPager由于需要根据HeaderLayout的滑动做出界面的调整，所以需要配置layout_behavior，并且其值为@string/header_layout_scrolling_view_behavior，这里和AppBarLayout的使用方式一致。我们的工作重点是头部控件的联动效果，因此咱们聚焦于HeaderLayout和其子View。我们看AppCompatImageView，它用来展示效果图中的歌手。仔细分析效果图中AppCompatImageView的变换方式，可以发现它是根据父控件HeaderLayout的滑动而做出的相应的变化效果，HeaderLayout向上滑动，其跟随向上，HeaderLayout向下滑动，则跟着向下。并且，在HeaderLayout滑动到底部继续向下拓展时，AppCompatImageView做了一个收缩的变换。这一切的一切都需要归功于app:transformation属性，可以在代码中看见其值为"scroll|extend_scale"，那么其含义是什么呢？对此，我们引出了一个概念----Transformation，它是一个接口，其意在为根据HeaderLayout的滑动及状态而做出相应的变化行为。在介绍Transformation之前，有必要介绍一下HeaderLayout滑动中的几种状态。
-  ![HeadeerLayout状态图](https://img-blog.csdnimg.cn/20190522164331459.PNG?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3oxMjg5MDQyMzI0,size_16,color_FFFFFF,t_70)
-　　HeaderLayout的滑动实际上是HeaderLayout高度的动态变化，所以需要了解图中三种高度的含义。maxHeight是HeaderLayout第一次加载测量后的高度，minHeight是设置了app:sticky_until_exit="true"属性的子View的高度之和，此属性表示子View不随着HeaderLayout而滑出屏幕，形成一种粘连在屏幕顶部的效果，且子View是按照顺序排列的。extendHeight则是拓展的高度，展示在效果图中就是图片收缩scale时下滑的高度，extendHeight可以在xml中为HeaderLayout设置，其值可以为dimension，百分数，或者float比例，百分数和float比例是按照maxHeight而计算的。
-　　而图中五种状态用来表示HeaderLayout高度变化过程中用来表示滑动状态的，Transformation就是根据应这五种状态而生，Transformation作用于HeaderLayout的直接子View或者间接子View(间接子View需要自己进行处理，可以参考[CommonToolbarTransformation](https://github.com/imurluck/HeaderLayout/blob/master/headerlayout_kotlin/src/main/java/com/zzx/headerlayout_kotlin/transformation/CommonToolbarTransformation.kt)),一个子View可以同时拥有多个Transformation，HeaderLayout在其状态变化时，则会遍历子View的所有Transformation，通知其做出改变。
+  ![HeadeerLayout状态图](https://img-blog.csdnimg.cn/20190522164331459.PNG?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3oxMjg5MDQyMzI0,size_16,color_FFFFFF,t_70)  
+  
+　　HeaderLayout的滑动实际上是HeaderLayout高度的动态变化，所以需要了解图中三种高度的含义。maxHeight是HeaderLayout第一次加载测量后的高度，minHeight是设置了app:sticky_until_exit="true"属性的子View的高度之和，此属性表示子View不随着HeaderLayout而滑出屏幕，形成一种粘连在屏幕顶部的效果，且子View是按照顺序排列的。extendHeight则是拓展的高度，展示在效果图中就是图片收缩scale时下滑的高度，extendHeight可以在xml中为HeaderLayout设置，其值可以为dimension，百分数，或者float比例，百分数和float比例是按照maxHeight而计算的。  
+　　而图中五种状态用来表示HeaderLayout高度变化过程中用来表示滑动状态的，Transformation就是根据应这五种状态而生，Transformation作用于HeaderLayout的直接子View或者间接子View(间接子View需要自己进行处理，可以参考[CommonToolbarTransformation](https://github.com/imurluck/HeaderLayout/blob/master/headerlayout_kotlin/src/main/java/com/zzx/headerlayout_kotlin/transformation/CommonToolbarTransformation.kt)),一个子View可以同时拥有多个Transformation，HeaderLayout在其状态变化时，则会遍历子View的所有Transformation，通知其做出改变。  
 　　XML中作用于AppCompatImageView的app:transformation="scroll|extend_scale"属性,scroll 和 extend_scale则是内置的两种Transformation，如下表所示。
   
   <table width="600" align="center">
@@ -121,7 +122,8 @@
       </tr>
   </table>
   
-  transformation表示内置的几中Transformation，但是想要自定义Transformation应该如何做呢？
+  
+　　transformation表示内置的几中Transformation，但是想要自定义Transformation应该如何做呢？
 
 ### 自定义Transformation
 
@@ -188,7 +190,7 @@ interface Transformation<in V: View> {
 ### Tips
 
 ------------------------
-　　开发者在使用app:transformation和app:sticky_untila_exit等属性时，最好用AppCompatImageView代替ImageView，AppCompatTextView代替TextView，这样在XML文件中则不会因为系统控件无法使用自定义属性而报红线，即使报红线也不会影响程序正常的执行，只是看着别扭。
+　　开发者在使用app:transformation和app:sticky_until_exit等属性时，最好用AppCompatImageView代替ImageView，AppCompatTextView代替TextView，这样在XML文件中则不会因为系统控件无法使用自定义属性而报红线，即使报红线也不会影响程序正常的执行，只是看着别扭。
 
 
 ### 总结
@@ -196,7 +198,7 @@ interface Transformation<in V: View> {
 ---------------------------------------------------------
 
 ​　　HeaderLayout是根据参照网易云音乐的效果而实现的，但又跳出了“实现”的限制，提取出来了一个公共而又与业务无关的控件，其思想则是学习了CoordinatorLayout的behavior和ViewGroup事件的分发思想，将HeaderLayout的滑动状态分发给其子View，从而产生联动效果。
-　　最后放上Github的地址把。
+　　
 
 ### 协议
 <a href="LICENSE">APACHE LICENSE-2.0</a> 
