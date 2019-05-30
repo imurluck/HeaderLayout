@@ -7,7 +7,7 @@
 
 ​　　网易云音乐App给用户的体验效果一直都非常好，尤其是流畅的动画和滑动的联动效果，都给人一种如丝滑般的感受，这一点在其歌手详情页面体现得尤为突出。那么我们就来实现这样的效果，但是我们不能只局限在实现当中，否则当需求变化就需要改动大量的代码，同时也不能保证它的复用性，放到其他界面则需要写许多重复代码。因此我们需要跳出实现的限制，将其中的元素抽取出来，制作成一个通用的库，并且保证其可拓展性和充分的用户自定义性。经过研究，最终实现了此控件，并取名为HeaderLayout，那么我们先来看看实现效果以便直观的感受一下。
 
-<img src="https://img-blog.csdnimg.cn/20190522164021712.gif" width="200" alt="效果图" align="center"/>
+<img src="./screenshots/HeaderLayout.gif" width="200" alt="效果图" div align=center/>
 
 ### 如何使用
 
@@ -64,7 +64,7 @@
   ![HeadeerLayout状态图](https://img-blog.csdnimg.cn/20190522164331459.PNG?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3oxMjg5MDQyMzI0,size_16,color_FFFFFF,t_70)  
   
 　　HeaderLayout的滑动实际上是HeaderLayout高度的动态变化，所以需要了解图中三种高度的含义。maxHeight是HeaderLayout第一次加载测量后的高度，minHeight是设置了app:sticky_until_exit="true"属性的子View的高度之和，此属性表示子View不随着HeaderLayout而滑出屏幕，形成一种粘连在屏幕顶部的效果，且子View是按照顺序排列的。extendHeight则是拓展的高度，展示在效果图中就是图片收缩scale时下滑的高度，extendHeight可以在xml中为HeaderLayout设置，其值可以为dimension，百分数，或者float比例，百分数和float比例是按照maxHeight而计算的。  
-　　而图中五种状态用来表示HeaderLayout高度变化过程中用来表示滑动状态的，Transformation就是根据应这五种状态而生，Transformation作用于HeaderLayout的直接子View或者间接子View(间接子View需要自己进行处理，可以参考[CommonToolbarTransformation](https://github.com/imurluck/HeaderLayout/blob/master/headerlayout_kotlin/src/main/java/com/zzx/headerlayout_kotlin/transformation/CommonToolbarTransformation.kt)),一个子View可以同时拥有多个Transformation，HeaderLayout在其状态变化时，则会遍历子View的所有Transformation，通知其做出改变。  
+　　而图中五种状态用来表示HeaderLayout高度变化过程中的滑动状态，Transformation就是根据这五种状态而生，Transformation作用于HeaderLayout的直接子View或者间接子View(间接子View需要自己进行处理，可以参考[CommonToolbarTransformation](https://github.com/imurluck/HeaderLayout/blob/master/headerlayout_kotlin/src/main/java/com/zzx/headerlayout_kotlin/transformation/CommonToolbarTransformation.kt)),一个子View可以同时拥有多个Transformation，HeaderLayout在其状态变化时，则会遍历子View的所有Transformation，通知其做出改变。  
 　　XML中作用于AppCompatImageView的app:transformation="scroll|extend_scale"属性,scroll 和 extend_scale则是内置的两种Transformation，如下表所示。
   
   <table width="600" align="center">
